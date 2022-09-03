@@ -1,0 +1,5 @@
+shiny
+pandas
+Jinja2
+matplotlib
+seaborn
