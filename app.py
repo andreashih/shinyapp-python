@@ -8,6 +8,8 @@ import numpy as np
 cnstr_shiny = pd.read_csv("data/cnstr_shiny_sense_pred.csv")
 cnstr_forms = cnstr_shiny['Form'].unique().tolist()
 relation_choices = ['吸引 (Attraction)', '不吸引 (Repulsion)']
+column_choices = ['構式形式', '構式例子', '上下文', '關聯', '搭配強度', 
+                '構式義（人工標記）', '構式義（機器預測）', 'PTT 板']
 
 app_ui = ui.page_fluid(
     ui.panel_title("Collostruction Analysis"),
@@ -18,13 +20,16 @@ app_ui = ui.page_fluid(
         ui.input_text("word", "輸入字詞", placeholder="什麼"),
         ui.input_select("cnstr_form", "構式", cnstr_forms),
         ui.input_radio_buttons("relation", "詞組與構式關係", relation_choices),
-        ui.input_numeric("n", "顯示數目", value=10)
+        ui.input_checkbox_group("column", "表格欄位", column_choices),
+        ui.input_numeric("n", "顯示數目", value=10),
+        width = 3
       ),
 
       ui.panel_main(
+
         ui.navset_tab(
             ui.nav("Table", ui.output_table("table")),
-            ui.nav("Plot", ui.output_plot("plot")),
+            ui.nav("Plot", ui.output_plot("plot"))     
         ),
       ),
     ),
@@ -41,7 +46,7 @@ def server(input, output, session):
 
         for form in cnstr_forms:
             if x is None:
-                x = []
+                form_choices = []
             elif x in form:
                 form_choices.append(form)
 
@@ -58,6 +63,11 @@ def server(input, output, session):
         cnstr_form = input.cnstr_form()
         relation = input.relation()
         n = input.n()
+        column = input.column()
+        column_mapping = {'構式形式': 'Form', '構式例子': 'Construction', 
+                        '上下文': 'Context', '關聯': 'Relation', '搭配強度': 'Collostruction_strength', 
+                        '構式義（人工標記）': 'Sense_annotated', 
+                        '構式義（機器預測）': 'Sense_predicted', 'PTT 板': 'Boardname'}
 
         # filter cnstr form
         cnstr_table = cnstr_shiny[cnstr_shiny['Form'] == cnstr_form]
@@ -72,8 +82,8 @@ def server(input, output, session):
         cnstr_table = cnstr_table.sort_values(by=['Collostruction_strength'], ascending=False)
 
         # select columns
-        cnstr_table = cnstr_table[['Form', 'Construction', 'Context', 'Relation', 'Collostruction_strength', 
-        'Sense_annotated', 'XY_relation_predicted', 'Sense_predicted', 'Boardname']]
+        column_display = [column_mapping.get(key) for key in column]
+        cnstr_table = cnstr_table[column_display]
         
         # slice first n rows
         cnstr_table = cnstr_table[0:n]
