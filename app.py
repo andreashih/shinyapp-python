@@ -5,7 +5,9 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 
+# read data
 cnstr_shiny = pd.read_csv("data/cnstr_shiny_sense_pred.csv")
+# define selections
 cnstr_forms = cnstr_shiny['Form'].unique().tolist()
 relation_choices = ['吸引 (Attraction)', '不吸引 (Repulsion)']
 column_choices = ['構式形式', '構式例子', '上下文', '關聯', '搭配強度', 
@@ -29,7 +31,7 @@ app_ui = ui.page_fluid(
 
         ui.navset_tab(
             ui.nav("Table", ui.output_table("table")),
-            ui.nav("Plot", ui.output_plot("plot"))     
+            ui.nav("Plot", ui.output_plot("plot", inline=True))     
         ),
       ),
     ),
@@ -81,12 +83,19 @@ def server(input, output, session):
         # sort by collostruction strength
         cnstr_table = cnstr_table.sort_values(by=['Collostruction_strength'], ascending=False)
 
-        # select columns
-        column_display = [column_mapping.get(key) for key in column]
-        cnstr_table = cnstr_table[column_display]
+        # # select columns
+        # column_display = [column_mapping.get(key) for key in column]
+        # cnstr_table = cnstr_table[column_display]
         
         # slice first n rows
         cnstr_table = cnstr_table[0:n]
+
+        # select columns
+        if len(column) == 0:
+            cnstr_table = cnstr_table[['Form', 'Construction', 'Context', 'Collostruction_strength']]
+        else:
+            column_display = [column_mapping.get(key) for key in column]
+            cnstr_table = cnstr_table[column_display]
         
         return cnstr_table
 
@@ -132,7 +141,7 @@ def server(input, output, session):
         sns.set_theme()
         matplotlib.font_manager.fontManager.addfont('data/TaipeiSansTCBeta-Regular.ttf') # 新增字體
         matplotlib.rc('font', family = 'Taipei Sans TC Beta') # 將 font-family 設為台北思源黑體
-        plt.figure(figsize=(50,50))
+        ##plt.figure(figsize=(8,6))
 
         # plot bar charts
         g = sns.catplot(data=cnstr_table_long,
