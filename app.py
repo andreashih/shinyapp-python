@@ -1,3 +1,4 @@
+from distutils.log import debug
 from shiny import App, render, ui, reactive
 import matplotlib.pyplot as plt
 import matplotlib
@@ -31,9 +32,11 @@ app_ui = ui.page_fluid(
 
         ui.navset_tab(
             ui.nav("Table", ui.output_table("table")),
-            ui.nav("Plot", ui.output_plot("plot", inline=True))     
+            ui.nav("Plot", ui.output_plot("plot"))     
         ),
+        
       ),
+        
     ),
 )
 
@@ -100,7 +103,7 @@ def server(input, output, session):
         return cnstr_table
 
     @output
-    @render.plot(alt="A histogram")
+    @render.plot
     def plot() -> object:
         cnstr_form = input.cnstr_form()
         relation = input.relation()
@@ -135,17 +138,23 @@ def server(input, output, session):
                                             value_name='strength',
                                             ignore_index=True)
 
-        cnstr_table_long.sort_values(['metric','strength'],ascending=False)
+        cnstr_table_long = cnstr_table_long.sort_values(['metric','strength'],ascending=False)
 
         # plot settings
         sns.set_theme()
         matplotlib.font_manager.fontManager.addfont('data/TaipeiSansTCBeta-Regular.ttf') # 新增字體
         matplotlib.rc('font', family = 'Taipei Sans TC Beta') # 將 font-family 設為台北思源黑體
-        ##plt.figure(figsize=(8,6))
+        plt.rcParams["figure.figsize"] = [7.00, 3.50]
+        plt.rcParams["figure.autolayout"] = True
+
+        fig, axes = plt.subplots(2, 2)
+
+        # Adjust the subplot layout parameters
+        fig.subplots_adjust(hspace=0.125, wspace=0.125)
 
         # plot bar charts
         g = sns.catplot(data=cnstr_table_long,
-                        col_wrap =2,
+                        col_wrap=2,
                         kind="bar",
                         orient = "h",
                         sharex=False,
@@ -156,4 +165,4 @@ def server(input, output, session):
 
         return g
 
-app = App(app_ui, server)
+app = App(app_ui, server, debug=True)
